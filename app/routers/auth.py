@@ -69,13 +69,16 @@ async def login_user(form_data: OAuth2PasswordRequestForm = Depends(), db: Async
 async def refresh_token(refresh_request: schemas.RefreshRequest, db: AsyncSession = Depends(get_session)):
     token_hash = hash_token(refresh_request.refresh_token)
     query = select(RefreshToken).where(RefreshToken.hashed_token == token_hash)
-    db_token = await db.exec(query).first()
+    res = await db.exec(query)
+    db_token = res.first()
 
-    if not db_token or db_token.is_revoked or db_token.expires_at < datetime.now(timezone.utc):
+    current_time = datetime.now(timezone.utc).replace(tzinfo=None)
+    if not db_token or db_token.is_revoked or db_token.expires_at < current_time:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid or expired refresh token.")
 
     query = select(User).where(User.id == db_token.user_id)
-    user = await db.exec(query).first()
+    res = await db.exec(query)
+    user = res.first()
     if not user or not user.is_active:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="User not found or inactive.")
     
