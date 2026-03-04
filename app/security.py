@@ -5,18 +5,21 @@ from pwdlib import PasswordHash
 from pwdlib.hashers.argon2 import Argon2Hasher
 from .config import settings
 
-# Initialize password hasher
+# Initialize password hasher - Argon2
 password_hash = PasswordHash((Argon2Hasher(),)).recommended()
 
 
+# Hashing password using plain text password
 def hash_password(password: str) -> str:
     """Hash a plain text password using Argon2."""
     return password_hash.hash(password)
 
+# Verify plain text passowrd with received hashed_password
 def verify_password(password: str, hashed_password: str) -> bool:
     """Verify a plain text password against a stored hashed password."""
     return password_hash.verify(password, hashed_password)
 
+# Access access_token creation, default role: user
 def create_access_token(subject: str | int, role: str = "user") -> str:
     """
     Create a short-lived, Asymmetric JWT access token using PRIVATE_KEY
@@ -24,7 +27,7 @@ def create_access_token(subject: str | int, role: str = "user") -> str:
     """
     expires = datetime.now(timezone.utc) + timedelta(minutes = settings.ACCESS_TOKEN_EXPIRE_MINUTES)
 
-    # JWT payload
+    # JWT payload - these details will be encoded to a JWT string using Public Key
     to_encode = {
         "sub": str(subject),
         "role": role,

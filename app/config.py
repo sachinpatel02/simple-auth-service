@@ -1,6 +1,7 @@
 import os
 from dotenv import load_dotenv
 
+# loading dotenv and exporting it using  settings variable
 load_dotenv()
 
 class Config:
@@ -12,5 +13,6 @@ class Config:
     PUBLIC_KEY_PATH = os.getenv("PUBLIC_KEY_PATH")
 settings = Config()
 
+# if we do not have public or private keys, we return an error
 if not os.path.exists(settings.PRIVATE_KEY_PATH) or not os.path.exists(settings.PUBLIC_KEY_PATH):
     raise FileNotFoundError("RSA key files not found. Please ensure the paths are correct.")

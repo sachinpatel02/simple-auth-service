@@ -3,7 +3,7 @@ import uuid
 from datetime import datetime
 
 #---------------------------------------------------------------
-# Request Schemas
+# Request Schemas : validate requests
 #---------------------------------------------------------------
 
 class UserCreate(BaseModel):
@@ -22,7 +22,7 @@ class RefreshRequest(BaseModel):
     refresh_token: str
 
 #---------------------------------------------------------------
-# Response Schemas
+# Response Schemas: validate responses
 #---------------------------------------------------------------
 
 class UserResponse(BaseModel):

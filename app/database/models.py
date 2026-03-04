@@ -3,6 +3,15 @@ import uuid
 from pydantic import EmailStr
 from datetime import datetime, timezone
 
+"""
+Database Tables: User and RefreshToken
+ * User : 
+    - the table stores data like email, hashed password etc.
+ * RefreshToken: 
+    - this table stores the hashed_refresh_token
+    - the access_token will have small expiry like 15 mins, so we need refresh_token to verify and regenerate access_token
+    
+"""
 class User(SQLModel, table=True):
     id : uuid.UUID = Field(default_factory = uuid.uuid4, primary_key=True)
     email : EmailStr = Field(unique=True, index = True)
