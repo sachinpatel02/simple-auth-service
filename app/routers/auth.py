@@ -1,19 +1,19 @@
 import hashlib
 
 from fastapi import APIRouter, Depends, HTTPException, status
+import jwt
 from sqlmodel import select
 from sqlmodel.ext.asyncio.session import AsyncSession
-from fastapi.security import OAuth2PasswordRequestForm
+from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from fastapi.concurrency import run_in_threadpool
 from datetime import datetime, timedelta, timezone
-
-from app.database import db
 
 from app.database import db
 from .. import schemas, security, dependencies
 from ..database.db import get_session
 from ..database.models import User, RefreshToken
 from ..config import settings
+from app.core.redis import redis_client
 
 router = APIRouter(prefix="/auth")
 
@@ -137,3 +137,32 @@ async def refresh_token(refresh_request: schemas.RefreshRequest, db: AsyncSessio
     db.add(new_db_refresh_token)
     await db.commit()
     return {"access_token": new_access_token, "refresh_token": new_raw_refresh_token, "token_type": "bearer"}
+
+"""
+4. /api/v1/auth/logout/
+
+"""
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/v1/auth/login")
+@router.post("/logout", status_code=status.HTTP_200_OK)
+async def logout(token: str = Depends(oauth2_scheme)):
+    """
+    Destroys the current session by adding the Access Token to the Redis blocklist.
+    """
+    try:
+        payload = jwt.decode(token, options={"verify_signature": False})
+        exp = payload.get("exp")
+        if exp:
+            now = int(datetime.now(timezone.utc).timestamp())
+            ttl = exp - now
+            
+            # If the token hasn't expired naturally yet, add it to Redis
+            if ttl > 0:
+                # setex = "Set with Expiration". It automatically deletes the key when TTL hits 0.
+                await redis_client.setex(f"blocklist:{token}", ttl, "revoked")
+            
+            return {"message": "Successfully logged out."}
+    except jwt.DecodeError:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST, 
+            detail="Invalid token format."
+        )
