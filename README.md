@@ -2,6 +2,7 @@
 
 ## Folder Structure
 
+```
 simple-auth-service/
 │
 ├── README.md
@@ -32,4 +33,5 @@ simple-auth-service/
 │   └── routers/
 │       └── auth.py
 │
-└── gateway/
+└── gateway/ 
+```
